@@ -45,7 +45,7 @@ function App() {
     formData.append('file', file)
 
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/transcribe', formData, {
+      const response = await axios.post('https://audiotomidi-server.onrender.com/api/v1/transcribe', formData, {
         responseType: 'blob',
       })
 
