@@ -8,6 +8,7 @@ function App() {
   const [midiUrl, setMidiUrl] = useState(null)
   const [error, setError] = useState(null)
   const [audioPreview, setAudioPreview] = useState(null)
+  const [conversionTime, setConversionTime] = useState(null)
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0]
@@ -16,6 +17,7 @@ function App() {
       setAudioPreview(URL.createObjectURL(selectedFile))
       setMidiUrl(null)
       setError(null)
+      setConversionTime(null)
     }
   }
 
@@ -31,6 +33,7 @@ function App() {
       setAudioPreview(URL.createObjectURL(droppedFile))
       setMidiUrl(null)
       setError(null)
+      setConversionTime(null)
     }
   }
 
@@ -40,17 +43,23 @@ function App() {
     setLoading(true)
     setError(null)
     setMidiUrl(null)
+    setConversionTime(null)
 
     const formData = new FormData()
     formData.append('file', file)
 
     try {
-      const response = await axios.post('https://audiotomidi-server.onrender.com/api/v1/transcribe', formData, {
+      const response = await axios.post('http://localhost:8000/api/v1/transcribe', formData, {
         responseType: 'blob',
       })
 
       const url = window.URL.createObjectURL(new Blob([response.data]))
       setMidiUrl(url)
+
+      const time = response.headers['x-conversion-time']
+      if (time) {
+        setConversionTime(parseFloat(time).toFixed(2))
+      }
     } catch (err) {
       console.error(err)
       const errorMessage = err.response?.data?.detail || 'An error occurred during conversion. Please try again.'
@@ -64,7 +73,7 @@ function App() {
     <div className="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-center p-4">
       <div className="max-w-md w-full bg-gray-800 rounded-xl shadow-2xl overflow-hidden p-8">
         <h1 className="text-3xl font-bold text-center mb-8 bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-          MP3 to MIDI Converter
+          Audio to MIDI Converter
         </h1>
 
         <div
@@ -134,6 +143,9 @@ function App() {
         {midiUrl && (
           <div className="mt-6 p-4 bg-green-900/30 border border-green-500/30 rounded-lg text-center animate-fade-in">
             <p className="text-green-400 font-medium mb-3">Conversion Complete!</p>
+            {conversionTime && (
+              <p className="text-gray-300 text-sm mb-3">Time taken: {conversionTime} seconds</p>
+            )}
             <a
               href={midiUrl}
               download={`${file.name.split('.')[0]}.mid`}
